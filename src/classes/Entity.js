@@ -1,21 +1,45 @@
 import Vector3 from '../util.js'
 
 export default class Entity {
-    constructor(catalyst, type, shader) {
+    constructor(catalyst, type) {
         this.catalyst = catalyst
         this.type = type
-        this.shader = shader
         this.position = new Vector3(0, 0, 0)
         this.rotation = new Vector3(0, 0, 0)
         this.scale = new Vector3(1, 1, 1)
 
         this.modelMatrix = mat4.create()
+        this.texture = null
+    }
+
+    setShader(key) {
+        this.shader = key
+        return this
+    }
+
+    setTexture(key) {
+        this.texture = this.catalyst.textures.textures.get(key)
+        return this
     }
 
     setPosition(x = undefined, y = undefined, z = undefined) {
         if (x !== undefined) this.position.x = x
         if (y !== undefined) this.position.y = y
         if (z !== undefined) this.position.z = z
+
+        return this
+    }
+    setScale(x = undefined, y = undefined, z = undefined) {
+        if (x !== undefined) this.scale.x = x
+        if (y !== undefined) this.scale.y = y
+        if (z !== undefined) this.scale.z = z
+
+        return this
+    }
+    setRotation(x = undefined, y = undefined, z = undefined) {
+        if (x !== undefined) this.rotation.x = x
+        if (y !== undefined) this.rotation.y = y
+        if (z !== undefined) this.rotation.z = z
 
         return this
     }
@@ -26,6 +50,19 @@ export default class Entity {
 
         this.setUniforms()
         this.setBuffers()
+
+        if (this.texture) {
+            this.catalyst.gl.activeTexture(this.catalyst.gl.TEXTURE0)
+            this.catalyst.gl.bindTexture(
+                this.catalyst.gl.TEXTURE_2D,
+                this.texture
+            )
+            const samplerLocation = this.catalyst.gl.getUniformLocation(
+                this.catalyst.shaders.activeShader,
+                'uSampler'
+            )
+            this.catalyst.gl.uniform1i(samplerLocation, 0)
+        }
 
         if (buffers.indexBuffer) {
             this.catalyst.gl.bindBuffer(

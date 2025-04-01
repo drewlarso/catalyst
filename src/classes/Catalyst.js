@@ -2,6 +2,7 @@ import Camera from './Camera.js'
 import Geometry from './Geometry.js'
 import Scene from './Scene.js'
 import Shaders from './Shaders.js'
+import Textures from './Textures.js'
 
 export default class Catalyst {
     constructor() {
@@ -13,6 +14,7 @@ export default class Catalyst {
 
         this.shaders = new Shaders(this)
         this.geometry = new Geometry(this)
+        this.textures = new Textures(this)
         this.camera = new Camera(this)
         this.scene = new Scene(this)
 

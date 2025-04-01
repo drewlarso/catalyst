@@ -7,7 +7,7 @@ export default class Geometry {
         this.buffers = {}
     }
 
-    create(type, shader = 'default') {
+    create(type) {
         if (!this.buffers[type]) {
             let data
             switch (type) {
@@ -23,7 +23,12 @@ export default class Geometry {
             this.buffers[type] = this.createBuffers(data)
         }
 
-        return new Entity(this.catalyst, type, shader)
+        return new Entity(this.catalyst, type).setShader('default')
+    }
+
+    createCustom(name, data) {
+        this.buffers[name] = this.createBuffers(data)
+        return new Entity(this.catalyst, name).setShader('default')
     }
 
     createBuffers(data) {
