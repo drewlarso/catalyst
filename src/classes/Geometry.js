@@ -61,6 +61,17 @@ export default class Geometry {
             )
         }
 
+        let normalBuffer = undefined
+        if (data.normals) {
+            normalBuffer = gl.createBuffer()
+            gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer)
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array(data.normals),
+                gl.STATIC_DRAW
+            )
+        }
+
         gl.bindBuffer(gl.ARRAY_BUFFER, null)
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null)
 
@@ -68,6 +79,7 @@ export default class Geometry {
             vertexBuffer,
             indexBuffer,
             uvBuffer,
+            normalBuffer,
             vertexCount: data.indices.length,
         }
     }
@@ -140,6 +152,20 @@ function createCube() {
             0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
             // Left
             0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,
+        ],
+        normals: [
+            // Front
+            0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
+            // Back
+            0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0,
+            // Top
+            0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+            // Bottom
+            0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0,
+            // Right
+            1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+            // Left
+            -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0,
         ],
     }
 }

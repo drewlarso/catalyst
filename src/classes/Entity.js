@@ -10,6 +10,12 @@ export default class Entity {
 
         this.modelMatrix = mat4.create()
         this.texture = null
+        this.lighted = false
+    }
+
+    setLighted(value) {
+        this.lighted = value
+        return this
     }
 
     setShader(key) {
@@ -110,6 +116,21 @@ export default class Entity {
             this.modelMatrix
         )
 
+        if (this.lighted) {
+            const normalMatrix = mat4.create()
+            mat4.invert(normalMatrix, this.modelMatrix)
+            mat4.transpose(normalMatrix, normalMatrix)
+            const normalMatrixLocation = this.catalyst.gl.getUniformLocation(
+                this.catalyst.shaders.activeShader,
+                'uNormalMatrix'
+            )
+            this.catalyst.gl.uniformMatrix4fv(
+                normalMatrixLocation,
+                false,
+                normalMatrix
+            )
+        }
+
         this.catalyst.camera.update()
     }
 
@@ -138,6 +159,17 @@ export default class Entity {
                 buffers.uvBuffer
             )
             this.enableAttribute('aTextureCoord', 2, this.catalyst.gl.FLOAT)
+        }
+
+        if (this.lighted) {
+            if (buffers.normalBuffer) {
+                this.catalyst.gl.bindBuffer(
+                    this.catalyst.gl.ARRAY_BUFFER,
+                    buffers.normalBuffer
+                )
+
+                this.enableAttribute('aVertexNormal', 3, this.catalyst.gl.FLOAT)
+            }
         }
     }
 
