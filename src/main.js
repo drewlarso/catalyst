@@ -1,31 +1,29 @@
 import Catalyst from './classes/Catalyst.js'
+import Scene from './classes/Scene.js'
 import Vector3 from './util.js'
 
 const catalyst = new Catalyst()
-const scene = {}
+const debugScene = new Scene(catalyst)
+catalyst.scene = debugScene
 
-catalyst.load = async () => {
+const objects = debugScene.objects
+
+debugScene.load = async () => {
     await catalyst.shaders.load(
         'textured',
         'src/shaders/textured.vs',
         'src/shaders/textured.fs'
     )
 
-    scene.cube = catalyst.geometry.create('cube').setPosition(1, 3, 5)
-    scene.cube1 = catalyst.geometry.create('cube', 'textured')
-    scene.triangle2 = catalyst.geometry.create('triangle').setPosition(5, -3, 3)
+    objects.cube = catalyst.geometry.create('cube')
+    console.log(objects)
 
     catalyst.camera.position = new Vector3(10, 3, 5)
 }
 
-catalyst.update = (dt) => {
-    scene.cube1.rotation.x += dt
-    scene.cube1.rotation.y += dt
-    scene.cube1.rotation.z += dt
-}
-
-catalyst.draw = () => {
-    for (const obj in scene) if (scene[obj].draw) scene[obj].draw()
+debugScene.update = (dt) => {
+    objects.cube.rotation.z += dt * 5
+    objects.cube.position.z = Math.sin(objects.cube.rotation.z)
 }
 
 catalyst.start()

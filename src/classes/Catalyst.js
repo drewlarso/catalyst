@@ -1,5 +1,6 @@
 import Camera from './Camera.js'
 import Geometry from './Geometry.js'
+import Scene from './Scene.js'
 import Shaders from './Shaders.js'
 
 export default class Catalyst {
@@ -13,6 +14,7 @@ export default class Catalyst {
         this.shaders = new Shaders(this)
         this.geometry = new Geometry(this)
         this.camera = new Camera(this)
+        this.scene = new Scene(this)
 
         this.load = async () => {}
         this.update = (dt) => {}
@@ -32,7 +34,7 @@ export default class Catalyst {
         )
         this.shaders.use('default')
 
-        await this.load()
+        await this.scene.load()
         this.render()
     }
 
@@ -49,8 +51,8 @@ export default class Catalyst {
             previous = timestamp
 
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT)
-            this.update(dt)
-            this.draw()
+            this.scene.update(dt)
+            this.scene.draw()
 
             requestAnimationFrame(renderLoop)
         }
