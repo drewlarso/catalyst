@@ -29,107 +29,144 @@ export default class Geometry {
         return new Entity(this.catalyst, type).setShader('default')
     }
 
-    async createOBJ(key, url) {
-        const data = await this.loadOBJ(url)
+    async createGLTF(key, url) {
+        const data = await this.loadGLTF(url)
+        console.log(data)
         this.buffers[key] = this.createBuffers(data)
         return new Entity(this.catalyst, key).setShader('default')
     }
 
-    async loadOBJ(url) {
-        const vertices = []
-        const indices = []
-        const uvs = []
-        const normals = []
-
-        const tempVertices = []
-        const tempUVs = []
-        const tempNormals = []
-
-        const indexMap = {}
-
+    async loadGLTF(url) {
         try {
             const response = await fetch(url)
-            const data = await response.text()
-
-            const lines = data.split('\n')
-            for (const line of lines) {
-                const parts = line.trim().split(/\s+/)
-                if (parts.length === 0) continue
-
-                const type = parts[0]
-
-                if (type === 'v') {
-                    // Vertex positions
-                    tempVertices.push([
-                        parseFloat(parts[1]),
-                        parseFloat(parts[2]),
-                        parseFloat(parts[3]),
-                    ])
-                } else if (type === 'vt') {
-                    // Texture coordinates
-                    tempUVs.push([parseFloat(parts[1]), parseFloat(parts[2])])
-                } else if (type === 'vn') {
-                    // Vertex normals
-                    tempNormals.push([
-                        parseFloat(parts[1]),
-                        parseFloat(parts[2]),
-                        parseFloat(parts[3]),
-                    ])
-                } else if (type === 'f') {
-                    // Faces
-                    const faceVertices = []
-
-                    for (let i = 1; i < parts.length; i++) {
-                        const key = parts[i]
-                        if (indexMap[key] === undefined) {
-                            const indices = key.split('/')
-                            const vertexIndex = parseInt(indices[0]) - 1
-                            const uvIndex = indices[1]
-                                ? parseInt(indices[1]) - 1
-                                : -1
-                            const normalIndex = indices[2]
-                                ? parseInt(indices[2]) - 1
-                                : -1
-
-                            // Add vertex position
-                            const vertex = tempVertices[vertexIndex]
-                            vertices.push(...vertex)
-
-                            // Add texture coordinates if available
-                            if (uvIndex >= 0) {
-                                const uv = tempUVs[uvIndex]
-                                uvs.push(...uv)
-                            }
-
-                            // Add normals if available
-                            if (normalIndex >= 0) {
-                                const normal = tempNormals[normalIndex]
-                                normals.push(...normal)
-                            }
-
-                            const newIndex = vertices.length / 3 - 1
-                            indexMap[key] = newIndex
-                            faceVertices.push(indexMap[key])
-                        } else {
-                            faceVertices.push(indexMap[key])
-                        }
-                    }
-
-                    for (let i = 1; i < faceVertices.length - 1; i++) {
-                        indices.push(
-                            faceVertices[0],
-                            faceVertices[i],
-                            faceVertices[i + 1]
-                        )
-                    }
-                }
-            }
-
-            return { vertices, indices, uvs, normals }
+            const data = await response.json()
+            const buffers = await this.parseGLTFBuffers(data)
+            const meshData = this.parseMeshes(data, buffers)
+            return meshData
         } catch (error) {
-            console.error('Error loading OBJ file:', error)
             throw error
         }
+    }
+
+    async parseGLTFBuffers(data) {
+        const buffers = await Promise.all(
+            data.buffers.map(async (buffer) => {
+                const response = await fetch(`public/${buffer.uri}`)
+                const arrayBuffer = await response.arrayBuffer()
+                return arrayBuffer
+            })
+        )
+
+        return buffers
+    }
+
+    parseMeshes(gltf, buffers) {
+        const bufferViews = gltf.bufferViews || []
+        const accessors = gltf.accessors || []
+        const meshes = []
+
+        gltf.meshes.forEach((mesh) => {
+            mesh.primitives.forEach((primitive) => {
+                const vertices = this.extractAccessorData(
+                    accessors[primitive.attributes.POSITION],
+                    3,
+                    buffers,
+                    bufferViews
+                )
+
+                const indices =
+                    primitive.indices !== undefined
+                        ? this.extractAccessorData(
+                              accessors[primitive.indices],
+                              1,
+                              buffers,
+                              bufferViews
+                          )
+                        : []
+
+                const uvs =
+                    primitive.attributes.TEXCOORD_0 !== undefined
+                        ? this.extractAccessorData(
+                              accessors[primitive.attributes.TEXCOORD_0],
+                              2,
+                              buffers,
+                              bufferViews
+                          )
+                        : []
+
+                const normals =
+                    primitive.attributes.NORMAL !== undefined
+                        ? this.extractAccessorData(
+                              accessors[primitive.attributes.NORMAL],
+                              3,
+                              buffers,
+                              bufferViews
+                          )
+                        : []
+
+                meshes.push({ vertices, indices, uvs, normals })
+            })
+        })
+
+        const combinedMesh = meshes.reduce(
+            (acc, mesh) => {
+                acc.vertices.push(...mesh.vertices)
+                acc.indices.push(
+                    ...mesh.indices.map((i) => i + acc.vertexOffset)
+                )
+                acc.uvs.push(...mesh.uvs)
+                acc.normals.push(...mesh.normals)
+                acc.vertexOffset += mesh.vertices.length / 3
+                return acc
+            },
+            { vertices: [], indices: [], uvs: [], normals: [], vertexOffset: 0 }
+        )
+
+        return {
+            vertices: combinedMesh.vertices,
+            indices: combinedMesh.indices,
+            uvs: combinedMesh.uvs,
+            normals: combinedMesh.normals,
+        }
+    }
+
+    extractAccessorData(accessor, components, buffers, bufferViews) {
+        const bufferView = bufferViews[accessor.bufferView]
+        const buffer = buffers[bufferView.buffer]
+        const byteOffset =
+            (bufferView.byteOffset || 0) + (accessor.byteOffset || 0)
+
+        let typedArray
+        switch (accessor.componentType) {
+            case 5120:
+                typedArray = Int8Array
+                break
+            case 5121:
+                typedArray = Uint8Array
+                break
+            case 5122:
+                typedArray = Int16Array
+                break
+            case 5123:
+                typedArray = Uint16Array
+                break
+            case 5125:
+                typedArray = Uint32Array
+                break
+            case 5126:
+                typedArray = Float32Array
+                break
+            default:
+                throw new Error('Unsupported component type')
+        }
+
+        const dataView = new typedArray(
+            buffer,
+            byteOffset,
+            accessor.count * components
+        )
+
+        return Array.from(dataView)
     }
 
     createCustom(name, data) {

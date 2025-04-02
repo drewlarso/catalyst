@@ -22,7 +22,7 @@ debugScene.load = async () => {
 
     catalyst.textures.load('debug', 'public/debug.png')
     catalyst.textures.load('inverted', 'public/inverted.png')
-    catalyst.textures.load('meowth', 'public/meowth.png')
+    catalyst.textures.load('spamton', 'public/spamton.png')
 
     // objects.sphere = catalyst.geometry
     //     .create('sphere')
@@ -30,21 +30,24 @@ debugScene.load = async () => {
     //     .setLighted(true)
     //     .setTexture('inverted')
 
-    objects.meowth = (
-        await catalyst.geometry.createOBJ('meowth', 'public/meowth.obj')
+    objects.spamton = (
+        await catalyst.geometry.createGLTF(
+            'spamton',
+            'public/spamton_idle.gltf'
+        )
     )
-        .setTexture('cipher')
         .setShader('phong')
         .setLighted(true)
-        .setScale(0.25, 0.25, 0.25)
-        .setPosition(0, 0, 0)
+        .setTexture('spamton')
         .setRotation(Math.PI / 2, 0, 0)
+        .setScale(2, 2, 2)
+        .setPosition(0, 0, -2)
 
-    catalyst.camera.position = new Vector3(3, -3, 3)
+    catalyst.camera.position = new Vector3(3, -3, 2)
 }
 
 debugScene.update = (dt) => {
-    objects.meowth.rotation.y += dt
+    objects.spamton.rotation.y += dt
 }
 
 catalyst.start()

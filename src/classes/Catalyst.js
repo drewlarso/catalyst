@@ -24,7 +24,7 @@ export default class Catalyst {
     }
 
     async start() {
-        this.gl.clearColor(0.1, 0.1, 0.1, 1.0)
+        this.gl.clearColor(0.2, 0.1, 0.4, 1.0)
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT)
         addEventListener('resize', this.resize.bind(this))
         this.resize()
