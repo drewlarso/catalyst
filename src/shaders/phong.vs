@@ -15,9 +15,9 @@ void main() {
     gl_Position = uProjectionViewMatrix * uModelMatrix * aVertexPosition;
     vTextureCoord = aTextureCoord;
 
-    vec3 ambientLight = vec3(0.6);
+    vec3 ambientLight = vec3(0.2);
     vec3 directionalLightColor = vec3(1.0);
-    vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+    vec3 directionalVector = normalize(vec3(0.85, 0.6, 0.75));
 
     vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
 

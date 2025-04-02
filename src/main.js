@@ -22,32 +22,55 @@ debugScene.load = async () => {
 
     catalyst.textures.load('debug', 'public/debug.png')
     catalyst.textures.load('inverted', 'public/inverted.png')
-    catalyst.textures.load('spamton', 'public/spamton.png')
+    catalyst.textures.load('skybox', 'public/skybox.png')
+    catalyst.textures.load('mimikyu', 'public/mimikyu.png')
+    catalyst.textures.load('thwomp', 'public/thwomp.png')
+    catalyst.textures.load('insect', 'public/insect.png')
 
-    // objects.sphere = catalyst.geometry
-    //     .create('sphere')
-    //     .setShader('phong')
-    //     .setLighted(true)
-    //     .setTexture('inverted')
+    objects.skybox = (
+        await catalyst.geometry.createGLTF('skybox', 'public/skybox.gltf')
+    )
+        .setShader('textured')
+        .setTexture('skybox')
+        .setRotation(Math.PI / 2, 0, 0)
 
-    objects.spamton = (
-        await catalyst.geometry.createGLTF(
-            'spamton',
-            'public/spamton_idle.gltf'
-        )
+    objects.mimikyu = (
+        await catalyst.geometry.createGLTF('mimikyu', 'public/mimikyu.gltf')
     )
         .setShader('phong')
         .setLighted(true)
-        .setTexture('spamton')
-        .setRotation(Math.PI / 2, 0, 0)
-        .setScale(2, 2, 2)
-        .setPosition(0, 0, -2)
+        .setTexture('mimikyu')
+        .setRotation(0, Math.PI, 0)
+        .setScale(0.75, 0.75, 0.75)
 
-    catalyst.camera.position = new Vector3(3, -3, 2)
+    objects.thwomp = (
+        await catalyst.geometry.createGLTF('thwomp', 'public/thwomp.gltf')
+    )
+        .setShader('phong')
+        .setLighted(true)
+        .setTexture('thwomp')
+        .setRotation(0, Math.PI, 0)
+        .setScale(0.75, 0.75, 0.75)
+        .setPosition(8, -15, 0)
+
+    objects.insect = (
+        await catalyst.geometry.createGLTF('insect', 'public/insect.gltf')
+    )
+        .setShader('phong')
+        .setLighted(true)
+        .setTexture('insect')
+        .setRotation(0, Math.PI, Math.PI / 2)
+        .setScale(2, 2, 2)
+        .setPosition(-10, 5, 0)
+
+    catalyst.camera.position = new Vector3(8, 10, 8)
+    catalyst.camera.lookAt = new Vector3(0, 0, 4)
 }
 
 debugScene.update = (dt) => {
-    objects.spamton.rotation.y += dt
+    objects.mimikyu.rotation.z += dt
+    objects.thwomp.position.z = Math.sin(objects.mimikyu.rotation.z * 2)
+    objects.thwomp.rotation.z -= dt / 2
 }
 
 catalyst.start()

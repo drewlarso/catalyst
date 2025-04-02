@@ -8,9 +8,15 @@ export default class Entity {
         this.rotation = new Vector3(0, 0, 0)
         this.scale = new Vector3(1, 1, 1)
 
+        this.meshes = []
+
         this.modelMatrix = mat4.create()
         this.texture = null
         this.lighted = false
+    }
+
+    addMesh(mesh) {
+        this.meshes.push(mesh)
     }
 
     setLighted(value) {

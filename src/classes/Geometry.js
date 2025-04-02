@@ -31,7 +31,6 @@ export default class Geometry {
 
     async createGLTF(key, url) {
         const data = await this.loadGLTF(url)
-        console.log(data)
         this.buffers[key] = this.createBuffers(data)
         return new Entity(this.catalyst, key).setShader('default')
     }
