@@ -17,6 +17,9 @@ export default class Geometry {
                 case 'triangle':
                     data = createTriangle()
                     break
+                case 'sphere':
+                    data = createSphere()
+                    break
                 default:
                     throw new Error(`Geometry of type ${type} doesnt exist!`)
             }
@@ -24,6 +27,109 @@ export default class Geometry {
         }
 
         return new Entity(this.catalyst, type).setShader('default')
+    }
+
+    async createOBJ(key, url) {
+        const data = await this.loadOBJ(url)
+        this.buffers[key] = this.createBuffers(data)
+        return new Entity(this.catalyst, key).setShader('default')
+    }
+
+    async loadOBJ(url) {
+        const vertices = []
+        const indices = []
+        const uvs = []
+        const normals = []
+
+        const tempVertices = []
+        const tempUVs = []
+        const tempNormals = []
+
+        const indexMap = {}
+
+        try {
+            const response = await fetch(url)
+            const data = await response.text()
+
+            const lines = data.split('\n')
+            for (const line of lines) {
+                const parts = line.trim().split(/\s+/)
+                if (parts.length === 0) continue
+
+                const type = parts[0]
+
+                if (type === 'v') {
+                    // Vertex positions
+                    tempVertices.push([
+                        parseFloat(parts[1]),
+                        parseFloat(parts[2]),
+                        parseFloat(parts[3]),
+                    ])
+                } else if (type === 'vt') {
+                    // Texture coordinates
+                    tempUVs.push([parseFloat(parts[1]), parseFloat(parts[2])])
+                } else if (type === 'vn') {
+                    // Vertex normals
+                    tempNormals.push([
+                        parseFloat(parts[1]),
+                        parseFloat(parts[2]),
+                        parseFloat(parts[3]),
+                    ])
+                } else if (type === 'f') {
+                    // Faces
+                    const faceVertices = []
+
+                    for (let i = 1; i < parts.length; i++) {
+                        const key = parts[i]
+                        if (indexMap[key] === undefined) {
+                            const indices = key.split('/')
+                            const vertexIndex = parseInt(indices[0]) - 1
+                            const uvIndex = indices[1]
+                                ? parseInt(indices[1]) - 1
+                                : -1
+                            const normalIndex = indices[2]
+                                ? parseInt(indices[2]) - 1
+                                : -1
+
+                            // Add vertex position
+                            const vertex = tempVertices[vertexIndex]
+                            vertices.push(...vertex)
+
+                            // Add texture coordinates if available
+                            if (uvIndex >= 0) {
+                                const uv = tempUVs[uvIndex]
+                                uvs.push(...uv)
+                            }
+
+                            // Add normals if available
+                            if (normalIndex >= 0) {
+                                const normal = tempNormals[normalIndex]
+                                normals.push(...normal)
+                            }
+
+                            const newIndex = vertices.length / 3 - 1
+                            indexMap[key] = newIndex
+                            faceVertices.push(indexMap[key])
+                        } else {
+                            faceVertices.push(indexMap[key])
+                        }
+                    }
+
+                    for (let i = 1; i < faceVertices.length - 1; i++) {
+                        indices.push(
+                            faceVertices[0],
+                            faceVertices[i],
+                            faceVertices[i + 1]
+                        )
+                    }
+                }
+            }
+
+            return { vertices, indices, uvs, normals }
+        } catch (error) {
+            console.error('Error loading OBJ file:', error)
+            throw error
+        }
     }
 
     createCustom(name, data) {
@@ -83,6 +189,42 @@ export default class Geometry {
             vertexCount: data.indices.length,
         }
     }
+}
+
+function createSphere(density = 16) {
+    const vertices = []
+    const normals = []
+    const uvs = []
+    const indices = []
+
+    for (let y = 0; y <= density; y++) {
+        const v = y / density
+        const phi = v * Math.PI
+        for (let x = 0; x <= density; x++) {
+            const u = x / density
+            const theta = u * 2 * Math.PI
+
+            const vX = Math.cos(theta) * Math.sin(phi)
+            const vY = Math.cos(phi)
+            const vZ = Math.sin(theta) * Math.sin(phi)
+
+            vertices.push(vX, vY, vZ)
+            normals.push(vX, vY, vZ)
+            uvs.push(u, v)
+        }
+    }
+
+    for (let y = 0; y < density; y++) {
+        for (let x = 0; x < density; x++) {
+            const first = y * (density + 1) + x
+            const second = first + density + 1
+
+            indices.push(first, second, first + 1)
+            indices.push(second, second + 1, first + 1)
+        }
+    }
+
+    return { vertices, indices, uvs, normals }
 }
 
 function createCube() {

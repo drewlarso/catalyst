@@ -22,36 +22,29 @@ debugScene.load = async () => {
 
     catalyst.textures.load('debug', 'public/debug.png')
     catalyst.textures.load('inverted', 'public/inverted.png')
+    catalyst.textures.load('meowth', 'public/meowth.png')
 
-    objects.cube = catalyst.geometry
-        .create('cube')
+    // objects.sphere = catalyst.geometry
+    //     .create('sphere')
+    //     .setShader('phong')
+    //     .setLighted(true)
+    //     .setTexture('inverted')
+
+    objects.meowth = (
+        await catalyst.geometry.createOBJ('meowth', 'public/meowth.obj')
+    )
+        .setTexture('cipher')
         .setShader('phong')
         .setLighted(true)
-        .setTexture('debug')
-    objects.cube1 = catalyst.geometry
-        .create('cube')
-        .setShader('phong')
-        .setLighted(true)
-        .setTexture('inverted')
-        .setPosition(1, -1, 1)
-        .setScale(2, 1.1, 1.5)
-    // objects.plane = catalyst.geometry
-    //     .createCustom('customPlane', {
-    //         vertices: [0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0],
-    //         indices: [0, 1, 2, 0, 2, 3],
-    //         uvs: [0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0],
-    //     })
-    //     .setShader('textured')
-    //     .setTexture('debug')
-    //     .setScale(5, 5, 5)
-    //     .setPosition(-5, -5, 0)
+        .setScale(0.25, 0.25, 0.25)
+        .setPosition(0, 0, 0)
+        .setRotation(Math.PI / 2, 0, 0)
 
-    catalyst.camera.position = new Vector3(3, 3, 3)
+    catalyst.camera.position = new Vector3(3, -3, 3)
 }
 
 debugScene.update = (dt) => {
-    objects.cube.rotation.z += dt
-    objects.cube.position.z = Math.sin(objects.cube.rotation.z)
+    objects.meowth.rotation.y += dt
 }
 
 catalyst.start()

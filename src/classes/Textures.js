@@ -7,7 +7,7 @@ export default class Textures {
         this.textures = new Map()
     }
 
-    load(key, url) {
+    load(key, url, invert = false) {
         const texture = this.gl.createTexture()
         this.gl.bindTexture(this.gl.TEXTURE_2D, texture)
 
@@ -34,6 +34,7 @@ export default class Textures {
         const image = new Image()
         image.onload = () => {
             this.gl.bindTexture(this.gl.TEXTURE_2D, texture)
+            if (invert) this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true)
             this.gl.texImage2D(
                 this.gl.TEXTURE_2D,
                 level,
